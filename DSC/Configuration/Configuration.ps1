@@ -162,11 +162,11 @@ configuration RDSDeployment
 
     if ($sessionHostNamingPrefix)
     { 
-        $sessionHosts = 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname }
+        $sessionHost = 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname }
     }
     else
     {
-        $sessionHosts = $localhost
+        $sessionHost = $localhost
     }
 
     if (-not $collectionName)         { $collectionName = "Desktop Collection" }
@@ -243,7 +243,7 @@ configuration RDSDeployment
             ConnectionBroker = $connectionBroker
             WebAccessServer  = $webAccessServer
 
-            SessionHosts     = $sessionHosts
+            SessionHost     = $sessionHost
 
             PsDscRunAsCredential = $domainCreds
         }
@@ -312,7 +312,7 @@ configuration RDSDeployment
             CollectionName = $collectionName
             CollectionDescription = $collectionDescription
             
-            SessionHosts = $sessionHosts
+            SessionHost = $sessionHost
 
             PsDscRunAsCredential = $domainCreds
         }
