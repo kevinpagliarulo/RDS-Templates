@@ -139,7 +139,7 @@ configuration RDSDeployment
         
         # RD Session Host count and naming prefix
         [Int]$numberOfRdshInstances = 1,
-        [String]$sessionHostNamingPrefix = "SessionHost-",
+        [String]$sessionHostNamingPrefix = "SessionHost",
 
         # Collection Name
         [String]$collectionName,
@@ -162,7 +162,7 @@ configuration RDSDeployment
 
     if ($sessionHostNamingPrefix)
     { 
-        $sh = @( 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname } )
+        $sh = @( 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D1") + "." + $domainname } )
         $sessionHost = $sh[0].ToString()
     }
     else
