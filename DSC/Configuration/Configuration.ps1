@@ -149,7 +149,7 @@ configuration RDSDeployment
 
     ) 
 
-    Import-DscResource -ModuleName PSDesiredStateConfiguration -ModuleVersion 1.1
+    Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xActiveDirectory, xComputerManagement, xRemoteDesktopSessionHost
    
     $localhost = [System.Net.Dns]::GetHostByName((hostname)).HostName
