@@ -1,10 +1,6 @@
-if ([System.Environment]::OSVersion.Version -lt "6.2.9200.0") { Throw "The minimum OS requirement was not met."}
-
+Import-Module -Name "$PSScriptRoot\..\..\xRemoteDesktopSessionHostCommon.psm1"
+if (!(Test-xRemoteDesktopSessionHostOsRequirement)) { Throw "The minimum OS requirement was not met."}
 Import-Module RemoteDesktop
-
-
-
-
 
 #######################################################################
 # The Get-TargetResource cmdlet.
@@ -15,23 +11,37 @@ function Get-TargetResource
     [OutputType([System.Collections.Hashtable])]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string] $ConnectionBroker,
+        [string] 
+        $ConnectionBroker,
         
-        [string] $GatewayServer,
+        [Parameter()]
+        [string] 
+        $GatewayServer,
 
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [string] $ExternalFqdn,
+        [string] 
+        $ExternalFqdn,
 
+        [Parameter()]
         [ValidateSet("DoNotUse","Custom","Automatic")]
-        [string] $GatewayMode,
+        [string] 
+        $GatewayMode,
 
+        [Parameter()]
         [ValidateSet("Password","Smartcard","AllowUserToSelectDuringConnection")]
-        [string] $LogonMethod,
+        [string] 
+        $LogonMethod,
 
-        [bool] $UseCachedCredentials,
-        [bool] $BypassLocal
+        [Parameter()]
+        [bool] 
+        $UseCachedCredentials,
+        
+        [Parameter()]
+        [bool] 
+        $BypassLocal
     )
 
 
@@ -84,13 +94,25 @@ function ValidateCustomModeParameters
 {
     param
     (  
+        [Parameter()]
         [ValidateSet("DoNotUse","Custom","Automatic")]
-        [string] $mode,
+        [string] 
+        $mode,
 
-        [string] $ExternalFqdn,
-        [string] $LogonMethod,
+        [Parameter()]
+        [string] 
+        $ExternalFqdn,
+        
+        [Parameter()]
+        [string] 
+        $LogonMethod,
 
+        [Parameter()]
+        [bool] 
         $UseCachedCredentials,
+        
+        [Parameter()]
+        [bool] 
         $BypassLocal
     )
 
@@ -102,11 +124,11 @@ function ValidateCustomModeParameters
     {
         # ensure all 4 parameters were passed in, otherwise Set-RdDeploymentGatewayConfiguration will fail
 
-        $nulls = $customModeParams.getenumerator() | where { $_.value -eq $null  }
+        $nulls = $customModeParams.getenumerator() | Where-Object { $null -eq $_.value }
 
         if ($nulls.count -gt 0)
         {
-            $nulls | % { write-verbose ">> '$($_.Key)' parameter is empty" }
+            $nulls | ForEach-Object { write-verbose ">> '$($_.Key)' parameter is empty" }
 
             write-warning "[PARAMETER VALIDATION FAILURE] i'm gonna throw, right now..."
 
@@ -117,11 +139,11 @@ function ValidateCustomModeParameters
     {
         # give warning about incorrect usage of the resource (do not fail)
 
-        $parametersWithValues = $customModeParams.getenumerator() | where { $_.value }
+        $parametersWithValues = $customModeParams.getenumerator() | Where-Object { $_.value }
 
         if ($parametersWithValues.count -gt 0)
         {
-            $parametersWithValues | % { write-verbose ">> '$($_.Key)' was specified, the value is: '$($_.Value)'" }
+            $parametersWithValues | ForEach-Object { write-verbose ">> '$($_.Key)' was specified, the value is: '$($_.Value)'" }
 
             write-warning ("[WARNING]: Requested gateway mode is '$mode', the following parametera can only be used with Gateway mode 'Custom': " + 
                             "$($parametersWithValues.Key -join ', '). These parameters will be ignored in the call to Set-RdDeploymentGatewayConfiguration to avoid error!")
@@ -135,21 +157,35 @@ function Set-TargetResource
     [CmdletBinding()]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string] $ConnectionBroker,
+        [string] 
+        $ConnectionBroker,
         
-        [string] $GatewayServer,
+        [Parameter()]
+        [string] 
+        $GatewayServer,
 
+        [Parameter()]
         [ValidateSet("DoNotUse","Custom","Automatic")]
-        [string] $GatewayMode,
+        [string] 
+        $GatewayMode,
 
-        [string] $ExternalFqdn,
+        [Parameter()]
+        [string] 
+        $ExternalFqdn,
 
+        [Parameter()]
         [ValidateSet("Password","Smartcard","AllowUserToSelectDuringConnection")]
-        [string] $LogonMethod,
+        [string] 
+        $LogonMethod,
 
+        [Parameter()]
+        [bool] 
         $UseCachedCredentials,
+        
+        [Parameter()]
+        [bool] 
         $BypassLocal
     )
 
@@ -165,7 +201,7 @@ function Set-TargetResource
 
         write-verbose "checking if the server is part of the deployment, getting list of servers..."
 
-        $servers = Get-RDServer -ConnectionBroker $ConnectionBroker | where Roles -eq RDS-Gateway
+        $servers = Get-RDServer -ConnectionBroker $ConnectionBroker | Where-Object Roles -eq RDS-Gateway
 
         if ($servers)
         {
@@ -233,23 +269,37 @@ function Test-TargetResource
     [OutputType([System.Boolean])]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string] $ConnectionBroker,
+        [string]
+        $ConnectionBroker,
         
-        [string] $GatewayServer,
+        [Parameter()]
+        [string]
+        $GatewayServer,
 
+        [Parameter()]
         [ValidateNotNullOrEmpty()]
-        [string] $ExternalFqdn,
+        [string]
+        $ExternalFqdn,
 
+        [Parameter()]
         [ValidateSet("DoNotUse","Custom","Automatic")]
-        [string] $GatewayMode,
+        [string]
+        $GatewayMode,
 
+        [Parameter()]
         [ValidateSet("Password","Smartcard","AllowUserToSelectDuringConnection")]
-        [string] $LogonMethod,
-
-        [bool] $UseCachedCredentials,
-        [bool] $BypassLocal
+        [string]
+        $LogonMethod,
+        
+        [Parameter()]
+        [bool]
+        $UseCachedCredentials,
+        
+        [Parameter()]
+        [bool]
+        $BypassLocal
     )
 
 
@@ -258,7 +308,18 @@ function Test-TargetResource
     if ($config)
     {
         write-verbose "verifying RD Gateway usage name..."
-        $result =  ($config.GatewayMode -ieq $GatewayMode)
+
+        if($config.GatewayMode -eq 'Custom' -and $config.GatewayMode -ieq $GatewayMode) 
+        {
+            $result = $config.BypassLocal -eq $BypassLocal -and
+                $config.UseCachedCredentials -eq $UseCachedCredentials -and
+                $config.LogonMethod -eq $LogonMethod -and 
+                $config.GatewayExternalFqdn -eq $ExternalFqdn
+        }
+        else
+        {
+            $result =  ($config.GatewayMode -ieq $GatewayMode)
+        }
     }
     else
     {

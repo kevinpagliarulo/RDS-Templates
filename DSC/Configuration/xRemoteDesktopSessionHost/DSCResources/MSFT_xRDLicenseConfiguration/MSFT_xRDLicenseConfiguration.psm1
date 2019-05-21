@@ -1,50 +1,54 @@
-if ([System.Environment]::OSVersion.Version -lt "6.2.9200.0") { Throw "The minimum OS requirement was not met."}
-
+Import-Module -Name "$PSScriptRoot\..\..\xRemoteDesktopSessionHostCommon.psm1"
+if (!(Test-xRemoteDesktopSessionHostOsRequirement)) { Throw "The minimum OS requirement was not met."}
 Import-Module RemoteDesktop
-
 
 #######################################################################
 # The Get-TargetResource cmdlet.
 #######################################################################
-function Get-TargetResource
+function Get-TargetResource 
 {
     [CmdletBinding()]
     [OutputType([System.Collections.Hashtable])]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string] $ConnectionBroker,
         
-        [string[]] $LicenseServers,
+        [Parameter()]
+        [string[]] 
+        $LicenseServer,
         
-        [string] $LicenseMode
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("PerUser", "PerDevice", "NotConfigured")]
+        [string] 
+        $LicenseMode
     )
 
     $result = $null
 
-    write-verbose "Getting RD License server configuration from broker '$ConnectionBroker'..."    
+    Write-Verbose "Getting RD License server configuration from broker '$ConnectionBroker'..."    
     
     $config = Get-RDLicenseConfiguration -ConnectionBroker $ConnectionBroker -ea SilentlyContinue
 
-    if ($config)   # Microsoft.RemoteDesktopServices.Management.LicensingSetting
+    if ($config)   # Microsoft.RemoteDesktopServices.Management.LicensingSetting 
     {
-        write-verbose "configuration retrieved successfully:"
-
-        $result = 
-        @{
-            "ConnectionBroker" = $ConnectionBroker
-            "LicenseServers"   = $config.LicenseServer          
-            "LicenseMode"      = $config.Mode.ToString()  # Microsoft.RemoteDesktopServices.Management.LicensingMode  .ToString()
-        }
-
-        write-verbose ">> RD License mode:     $($result.LicenseMode)"
-        write-verbose ">> RD License servers:  $($result.LicenseServers -join '; ')"
+    Write-Verbose "configuration retrieved successfully:"
     }
-    else
+    else 
     {
-        write-verbose "Failed to retrieve RD License configuration from broker '$ConnectionBroker'."
+        Write-Verbose "Failed to retrieve RD License configuration from broker '$ConnectionBroker'."
+        throw ("Failed to retrieve RD License configuration from broker '$ConnectionBroker'.")
     }
+    $result = 
+    @{
+        "ConnectionBroker" = $ConnectionBroker
+        "LicenseServer"   = $config.LicenseServer          
+        "LicenseMode"      = $config.Mode.ToString()  # Microsoft.RemoteDesktopServices.Management.LicensingMode  .ToString()
+    }
+
+    Write-Verbose ">> RD License mode:     $($result.LicenseMode)"
+    Write-Verbose ">> RD License servers:  $($result.LicenseServer -join '; ')"
 
     $result
 }
@@ -53,75 +57,101 @@ function Get-TargetResource
 ######################################################################## 
 # The Set-TargetResource cmdlet.
 ########################################################################
-function Set-TargetResource
+function Set-TargetResource 
 {
     [CmdletBinding()]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string] $ConnectionBroker,
         
-        [string[]] $LicenseServers,
+        [Parameter()]
+        [string[]] 
+        $LicenseServer,
         
+        [Parameter(Mandatory = $true)] # required parameter in Set-RDLicenseConfiguration
         [ValidateSet("PerUser", "PerDevice", "NotConfigured")]
-        [string] $LicenseMode
+        [string] 
+        $LicenseMode
     )
     
-    write-verbose "Starting RD License server configuration..."
-    write-verbose ">> RD Connection Broker:  $($ConnectionBroker.ToLower())"
+    Write-Verbose "Starting RD License server configuration..."
+    Write-Verbose ">> RD Connection Broker:  $($ConnectionBroker.ToLower())"
 
-    if ($LicenseServers)
+    if ($LicenseServer) 
     {
-        write-verbose ">> RD License servers:    $($LicenseServers -join '; ')"
+        Write-Verbose ">> RD License servers:    $($LicenseServer -join '; ')"
 
-        "calling Set-RDLicenseConfiguration cmdlet..."
-        Set-RDLicenseConfiguration -ConnectionBroker $ConnectionBroker -LicenseServer $LicenseServers -Mode $LicenseMode -Force
+        Write-Verbose "calling Set-RDLicenseConfiguration cmdlet..."
+        Set-RDLicenseConfiguration -ConnectionBroker $ConnectionBroker -LicenseServer $LicenseServer -Mode $LicenseMode -Force
     }
-    else
+    else 
     {
-        "calling Set-RDLicenseConfiguration cmdlet..."
+        Write-Verbose "calling Set-RDLicenseConfiguration cmdlet..."
         Set-RDLicenseConfiguration -ConnectionBroker $ConnectionBroker -Mode $LicenseMode -Force
     }
 
-    write-verbose "Set-RDLicenseConfiguration done."
+    Write-Verbose "Set-RDLicenseConfiguration done."
 }
 
 
 #######################################################################
 # The Test-TargetResource cmdlet.
 #######################################################################
-function Test-TargetResource
+function Test-TargetResource 
 {
     [CmdletBinding()]
     [OutputType([System.Boolean])]
     param
     (    
-        [parameter(Mandatory)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string] $ConnectionBroker,
         
-        [string[]] $LicenseServers,
+        [Parameter()]
+        [string[]] 
+        $LicenseServer,
         
+        [Parameter(Mandatory = $true)]
         [ValidateSet("PerUser", "PerDevice", "NotConfigured")]
         [string] $LicenseMode
     )
 
     $config = Get-TargetResource @PSBoundParameters
     
-    if ($config)
+    if ($config) 
     {
-        write-verbose "verifying RD Licensing mode..."
+        Write-Verbose "Verifying RD Licensing mode: $($config.LicenseMode -eq $LicenseMode)"
 
-        $result = ($config.LicenseMode -eq $LicenseMode)
+        Write-Verbose "Verifying RD license servers..."
+        $noChange = $true
+        if ($LicenseServer)
+        {
+            ForEach ($server in $config.LicenseServer)
+            {
+                if ($LicenseServer -notcontains $server)
+                {
+                    $noChange = $false
+                    Write-Verbose "License Server '$server' in the current configuration will be removed."
+                }
+            }
+            if ($LicenseServer.Count -ne $config.LicenseServer.Count)
+            {
+                $noChange = $false
+            }
+        }
+
+
+        $result = ($config.LicenseMode -eq $LicenseMode) -and $noChange
     }
-    else
+    else 
     {
-        write-verbose "Failed to retrieve RD License server configuration from broker '$ConnectionBroker'."
+        Write-Verbose "Failed to retrieve RD License server configuration from broker '$ConnectionBroker'."
         $result = $false
     }
 
-    write-verbose "Test-TargetResource returning:  $result"
+    Write-Verbose "Test-TargetResource returning:  $result"
     return $result
 }
 
