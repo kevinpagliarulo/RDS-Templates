@@ -162,11 +162,11 @@ configuration RDSDeployment
 
     if ($sessionHostNamingPrefix)
     { 
-        $sessionHost = 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname }
+        $sessionHost = @( 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname } )
     }
     else
     {
-        $sessionHost = $localhost
+        $sessionHost = @( $localhost )
     }
 
     if (-not $collectionName)         { $collectionName = "Desktop Collection" }
