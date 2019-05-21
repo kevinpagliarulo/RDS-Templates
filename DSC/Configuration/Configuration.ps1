@@ -166,7 +166,7 @@ configuration RDSDeployment
     }
     else
     {
-        $sessionHosts = @( $localhost )
+        $sessionHosts = $localhost
     }
 
     if (-not $collectionName)         { $collectionName = "Desktop Collection" }
