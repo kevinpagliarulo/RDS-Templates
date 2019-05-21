@@ -264,7 +264,7 @@ configuration RDSDeployment
             DependsOn = "[xRDServer]AddLicenseServer"
 
             ConnectionBroker = $connectionBroker
-            LicenseServers   = @( $connectionBroker )
+            LicenseServer   = @( $connectionBroker )
 
             LicenseMode = 'PerUser'
 
