@@ -162,7 +162,7 @@ configuration RDSDeployment
 
     if ($sessionHostNamingPrefix)
     { 
-        $sessionHosts = @( 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname } )
+        $sessionHosts = 1..($numberOfRdshInstances) | % { $sessionHostNamingPrefix + $_.ToString("D2") + "." + $domainname }
     }
     else
     {
