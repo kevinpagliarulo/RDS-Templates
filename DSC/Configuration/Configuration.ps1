@@ -236,6 +236,12 @@ configuration RDSDeployment
             Name = "RDS-Licensing"
         }
 
+        WindowsFeature RDS-Connection-Broker
+        {
+            Ensure = "Present"
+            Name = "RDS-Connection-Broker"
+        }
+
         xRDSessionDeployment Deployment
         {
             DependsOn = "[DomainJoin]DomainJoin"
