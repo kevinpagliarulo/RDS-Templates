@@ -188,17 +188,8 @@ configuration RDSDeployment
             adminCreds = $adminCreds 
         }
 
-        WindowsOptionalFeature IIS-ManagementConsole
-        {
-            Ensure = "Enable"
-            Name = "IIS-ManagementConsole"
-            NoWindowsUpdateCheck = $true
-        }
-
         WindowsFeature RSAT-RDS-Tools
         {
-            DependsOn = "[WindowsOptionalFeature]IIS-ManagementConsole"
-
             Ensure = "Present"
             Name = "RSAT-RDS-Tools"
             IncludeAllSubFeature = $true
