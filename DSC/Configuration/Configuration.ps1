@@ -170,7 +170,7 @@ configuration RDSDeployment
         $sessionHost = $localhost
     }
 
-    if (-not $collectionName)         { $collectionName = "Desktop Collection" }
+    if (-not $collectionName)         { $collectionName = "TstCollection" }
     if (-not $collectionDescription)  { $collectionDescription = "A sample RD Session collection up in cloud." }
 
 
